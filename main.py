@@ -1,6 +1,22 @@
 import ColumnMap
 import Mapping
 import Execution
+import pprint
+import json
+import csv
+
+def prettyprint(AllExecutions):
+	pprint.pprint(AllExecutions)
+
+def wrteJSON(AllExecutions):
+	with open("data-json.json", "w") as outfile:
+	    json.dump(AllExecutions, outfile, indent=4)
+
+def writeCSV(AllExecutions):
+	spamWriter = csv.writer(open('data.csv', 'wb'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+	spamWriter.writerow(AllExecutions[1].keys())
+	for execution in AllExecutions:
+		spamWriter.writerow(execution.values())
 
 Maps = ColumnMap.Maps
 CrimeMappings = Mapping.CrimeMappings
@@ -22,8 +38,8 @@ with open('08451-0001-Data.txt') as asciidata:
 		 	else:
 		 		attribute = value
 		else:
-			attribute = value
+			attribute = value.strip()
 		setattr(current_execution,column['name'],attribute)
 	AllExecutions.append(current_execution.getExecution())
 
-print AllExecutions
+writeCSV(AllExecutions)
