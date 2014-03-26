@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+<div class="content">
+<script src="d3.v3.min.js"></script>
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
+  <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+  <script src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+
+<script>
+
+function getFile(id) {
+dates = [1789030, 1789080, 1790040, 1790050, 1791030, 1791090, 1792030, 1792060, 1794010, 1795100, 1796060, 1798040, 1800070, 1800071, 1800100, 1802040, 1803030, 1803040, 1804030, 1804100, 1805010, 1805070, 1809030, 1810040, 1810100, 1812040, 1812050, 1812060, 1813040, 1816120, 1817030, 1817120, 1818100, 1818120, 1819030, 1819120, 1820030, 1821070, 1821080, 1821090, 1821091, 1822030, 1824110, 1825010, 1828050, 1834060, 1836030, 1836060, 1836070, 1837010, 1837030, 1838070, 1842110, 1845030, 1845120, 1846060, 1846080, 1846120, 1847010, 1847030, 1848020, 1848050, 1848080, 1849030, 1850090, 1853030, 1853120, 1854050, 1858050, 1859020, 1860020, 1860120, 1861010, 1861011, 1861012, 1861013, 1861014, 1861015, 1861020, 1861021, 1861022, 1861030, 1861031, 1861040, 1861041, 1861050, 1861051, 1861052, 1861053, 1861054, 1861070, 1861080, 1861100, 1861110, 1861120, 1861121, 1862070, 1863020, 1863030, 1863060, 1864050, 1864100, 1865040, 1866050, 1866070, 1867010, 1867030, 1867100, 1868060, 1868061, 1868070, 1868071, 1868072, 1868073, 1870010, 1870020, 1870030, 1870070, 1872100, 1876080, 1882030, 1884050, 1889110, 1889111, 1889112, 1890050, 1890070, 1890071, 1894070, 1896010, 1896050, 1898080, 1900060, 1903100, 1907110, 1912010, 1912020, 1912080, 1921030, 1959010, 1959080];
+var closest = null;
+
+$.each(dates, function(){
+  if (this <= id && (closest == null || (id - this) < (id - closest))) {
+    closest = this;
+  }
+});
+return closest;
+
+}
+
+  $(function() {
+$( "#slider" ).slider({
+  change: function( event, ui ) {
+    mapfile = "GeoJSON/" + getFile(ui.value) + ".geojson";
+    id = ui.value
+    console.log(id)
+    $("#currentYear").html("<h1>" + id.toString().substring(0,4) + "</h1>");
+    drawMap(mapfile)
+
+  },
+  range: "max",
+    min: 1789030, // min value
+    max: 1959080, // max value
+});
+  });
+</script>
+
+<script>
+var width = 960,
+    height = 500;
+var canvas = d3.select(".content").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+function drawMap(jsonFile){
+  canvas.selectAll("g").remove()
+  d3.json(jsonFile, function(data) {
+  var group = canvas.selectAll("g")
+              .data(data.features)
+              .enter()
+              .append("g")                
+              .attr("class", function(d){
+                    return d.properties.CATEGORY;
+                  })
+  var projection = d3.geo.albersUsa().scale(800);
+  var path = d3.geo.path().projection(projection);
+  var areas = group.append("path")
+                .attr("d", path)
+                .attr("class", "area")
+                .attr("stroke", "#fff")
+  });
+}
+//Setup the initial render
+drawMap("GeoJSON/1789030.geojson");
+</script>
+<div id="slider" style="width:960px; margin-left:10px;"></div>
+<div id="currentYear" style="width:40px; margin-left:auto; margin-right:auto;"></div>
+<style>
+.state {
+  fill: green;
+}
+.seceded_state,
+.other_country,
+.disputed,
+.none,
+.territory {
+  fill: grey;
+}
+.content {
+	width:800px; margin:0 auto;
+}
+</style>
+</div>
+</body>
+</html>
