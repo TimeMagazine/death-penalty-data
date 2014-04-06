@@ -26,24 +26,30 @@ return closest;
 var test = '';
 
 $(document).ready(function() {
+function logConsole(){
+  $.each($('.state'), function(index, value){
+    $('#console').append($(value).attr("state") + " : " + $(value).attr("executions") + "; ")
+  });
+}
 
 var color = d3.scale.linear()
     .domain([0, 0.001, 0.003, 0.007, 0.009, 0.15, 0.5, 0.7])
     .range(["rgb(247,251,255)", "rgb(222,235,247)", "rgb(198,219,239)", "rgb(158,202,225)", "rgb(107,174,214)", "rgb(66,146,198)", "rgb(33,113,181)", "rgb(8,81,156)", "rgb(8,48,137)"]);
-
-$( "#slider" ).slider({
-  change: function( event, ui ) {
-    id = ui.values
+function triggerRedraw(id){
     id.sort(function(a,b){return a-b});
     $("#currentYear").html("<h1>" + id[0].toString().substring(0,4) + " - " + id[1].toString().substring(0,4) + "</h1>");
     mapfile = getFile(id[1]);
     drawMap(mapfile)
     getExecutions(parseInt(id[0].toString().substring(0,4)),parseInt(id[1].toString().substring(0,4)))
+}
+$( "#slider" ).slider({
+  change: function( event, ui ) {
+    triggerRedraw(ui.values)
   },
   range: "max",
     min: 1789030, // min value
     max: 2002080, // max value
-  values: [1789030, 2002080]
+    values: [1789030, 2002080]
 });
 var width = 960,
     height = 500;
@@ -80,9 +86,11 @@ function getExecutions(begin,end) {
       }
     })
     DrawChloropleth(totalExecutions)
+    logConsole()
     }
 });
 }
+
 function drawMap(mapfile){
   canvas.selectAll("g").remove()
   d3.json("GeoJSON/master.topojson", function(error, data) {
@@ -106,18 +114,12 @@ function drawMap(mapfile){
   });
 }
 //Setup the initial render
-drawMap(1789030)
+triggerRedraw([1789030,200280])
 });
-</script>
-
-<script>
-$(document).ready(function(){
-
-});
-
 </script>
 <div id="slider" style="width:960px; margin-left:10px;"></div>
-<div id="currentYear" style="width:40px; margin-left:auto; margin-right:auto;"><h1>1789</h1></div>
+<div id="currentYear" style="width:100px; margin-left:auto; margin-right:auto;"><h1>1789</h1></div>
+<div id="console" style="width:400px; float:left;"></div>
 <style>
 .state {
 }
