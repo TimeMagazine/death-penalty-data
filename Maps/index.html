@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<body>
+<body style="background-color:grey;">
 <div class="content">
 <script src="d3.v3.min.js"></script>
   <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css">
   <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
   <script src="http://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
   <script src="http://d3js.org/topojson.v1.min.js"></script>
+  <script src="jquery.parse.min.js"></script>
 
 <script>
 
@@ -22,29 +23,66 @@ $.each(dates, function(){
 return closest;
 
 }
+var test = '';
 
-  $(function() {
+$(document).ready(function() {
+
+var color = d3.scale.linear()
+    .domain([0, 0.001, 0.003, 0.007, 0.009, 0.15, 0.5, 0.7])
+    .range(["rgb(247,251,255)", "rgb(222,235,247)", "rgb(198,219,239)", "rgb(158,202,225)", "rgb(107,174,214)", "rgb(66,146,198)", "rgb(33,113,181)", "rgb(8,81,156)", "rgb(8,48,137)"]);
+
 $( "#slider" ).slider({
   change: function( event, ui ) {
-    mapfile = getFile(ui.value);
-    id = ui.value
-    $("#currentYear").html("<h1>" + id.toString().substring(0,4) + "</h1>");
+    id = ui.values
+    id.sort(function(a,b){return a-b});
+    $("#currentYear").html("<h1>" + id[0].toString().substring(0,4) + " - " + id[1].toString().substring(0,4) + "</h1>");
+    mapfile = getFile(id[1]);
     drawMap(mapfile)
-
+    getExecutions(parseInt(id[0].toString().substring(0,4)),parseInt(id[1].toString().substring(0,4)))
   },
   range: "max",
     min: 1789030, // min value
-    max: 1959080, // max value
+    max: 2002080, // max value
+  values: [1789030, 2002080]
 });
-  });
-</script>
-
-<script>
 var width = 960,
     height = 500;
+
 var canvas = d3.select(".content").append("svg")
     .attr("width", width)
     .attr("height", height);
+function DrawChloropleth(totalExecutions) {
+  $.each($('.state'), function(index,value){
+      executions = parseInt($(value).attr("executions"))
+          gradient = (executions/totalExecutions)
+          $(value).attr("fill", color(gradient))
+  });
+
+}
+function getExecutions(begin,end) {
+  $.ajax({
+    url: "data.csv",
+    success: function (csvd) {
+        results = $.parse(csvd, {
+          delimiter: ",",
+          header: true,
+          dynamicTyping: true
+      })
+    totalExecutions = 0;
+    $.each(results.results.rows, function(index,value){
+      if(value.DateYear >= begin && value.DateYear <= end){
+        state = $('g[state="' + value.StateOfExecution + '"]')
+        if(state) {
+          executions = parseInt(state.attr("executions"))
+          state.attr("executions", ++executions);
+          totalExecutions = ++totalExecutions;
+        }
+      }
+    })
+    DrawChloropleth(totalExecutions)
+    }
+});
+}
 function drawMap(mapfile){
   canvas.selectAll("g").remove()
   d3.json("GeoJSON/master.topojson", function(error, data) {
@@ -55,29 +93,40 @@ function drawMap(mapfile){
               .attr("class", function(d){
                     return d.properties.CATEGORY;
                   })
+              .attr("state", function(d){
+                  return d.properties.LABEL;
+              })
+              .attr("executions", 0)
   var projection = d3.geo.albersUsa().scale(800);
   var path = d3.geo.path().projection(projection);
   var areas = group.append("path")
                 .attr("d", path)
                 .attr("class", "area")
-                .attr("stroke", "#fff")
+                .attr("stroke", "#000")
   });
 }
 //Setup the initial render
 drawMap(1789030)
+});
+</script>
+
+<script>
+$(document).ready(function(){
+
+});
+
 </script>
 <div id="slider" style="width:960px; margin-left:10px;"></div>
 <div id="currentYear" style="width:40px; margin-left:auto; margin-right:auto;"><h1>1789</h1></div>
 <style>
 .state {
-  fill: green;
 }
 .seceded_state,
 .other_country,
 .disputed,
 .none,
 .territory {
-  fill: grey;
+  fill: beige;
 }
 .content {
 	width:800px; margin:0 auto;
