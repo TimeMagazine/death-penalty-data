@@ -23,8 +23,8 @@ $.each(dates, function(){
 return closest;
 
 }
+var maps = {};
 var test = '';
-
 $(document).ready(function() {
 function logConsole(){
   $.each($('.state'), function(index, value){
@@ -39,25 +39,38 @@ function triggerRedraw(id){
     id.sort(function(a,b){return a-b});
     $("#currentYear").html("<h1>" + id[0].toString().substring(0,4) + " - " + id[1].toString().substring(0,4) + "</h1>");
     mapfile = getFile(id[1]);
-    drawMap(mapfile)
+    ready(maps, mapfile)
+    getExecutions(parseInt(id[0].toString().substring(0,4)),parseInt(id[1].toString().substring(0,4)))
+}
+
+function updateMap(id){
+    id.sort(function(a,b){return a-b});
+    $("#currentYear").html("<h1>" + id[0].toString().substring(0,4) + " - " + id[1].toString().substring(0,4) + "</h1>");
+    mapfile = getFile(id[1]);
+    changemap(maps, mapfile)
     getExecutions(parseInt(id[0].toString().substring(0,4)),parseInt(id[1].toString().substring(0,4)))
 }
 $( "#slider" ).slider({
   change: function( event, ui ) {
-    triggerRedraw(ui.values)
+    updateMap(ui.values)
   },
   range: "max",
     min: 1789030, // min value
     max: 2002080, // max value
     values: [1789030, 2002080]
 });
-var width = 960,
+var width = 900,
     height = 500;
 
-var canvas = d3.select(".content").append("svg")
+var svg = d3.select(".content").append("svg")
+    .attr("id", "map")
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+    .attr("style", "float:left;");
 function DrawChloropleth(totalExecutions) {
+var color = d3.scale.linear()
+    .domain([0, 0.001, 0.003, 0.007, 0.009, 0.15, 0.5, 0.7])
+    .range(["rgb(247,251,255)", "rgb(222,235,247)", "rgb(198,219,239)", "rgb(158,202,225)", "rgb(107,174,214)", "rgb(66,146,198)", "rgb(33,113,181)", "rgb(8,81,156)", "rgb(8,48,137)"]);
   $.each($('.state'), function(index,value){
       executions = parseInt($(value).attr("executions"))
           gradient = (executions/totalExecutions)
@@ -77,7 +90,7 @@ function getExecutions(begin,end) {
     totalExecutions = 0;
     $.each(results.results.rows, function(index,value){
       if(value.DateYear >= begin && value.DateYear <= end){
-        state = $('g[state="' + value.StateOfExecution + '"]')
+        state = $('path[state="' + value.StateOfExecution + '"]')
         if(state) {
           executions = parseInt(state.attr("executions"))
           state.attr("executions", ++executions);
@@ -90,36 +103,52 @@ function getExecutions(begin,end) {
     }
 });
 }
-
-function drawMap(mapfile){
-  canvas.selectAll("g").remove()
-  d3.json("GeoJSON/master.topojson", function(error, data) {
-  var group = canvas.selectAll("g")
-              .data(topojson.feature(data, data.objects[mapfile]).features)
-              .enter()
-              .append("g")                
-              .attr("class", function(d){
+var projection = d3.geo.albersUsa().scale(800);
+var path = d3.geo.path().projection(projection);
+var width = 900,
+    height = 500;
+d3.json("GeoJSON/master.topojson", function(error, data) {window.maps = data})
+function ready(maps) {
+ myMap = svg.selectAll("path");
+ myMap.data(topojson.feature(maps, maps.objects[1789030]).features)
+ .enter().append("path")
+ .attr("d", path)
+ .attr("class", function(d){
                     return d.properties.CATEGORY;
                   })
-              .attr("state", function(d){
+ .attr("state", function(d){
                   return d.properties.LABEL;
               })
-              .attr("executions", 0)
-  var projection = d3.geo.albersUsa().scale(800);
-  var path = d3.geo.path().projection(projection);
-  var areas = group.append("path")
-                .attr("d", path)
-                .attr("class", "area")
-                .attr("stroke", "#000")
-  });
+ .attr("executions", 0)
+ .style("stroke", "#ffffff");
 }
+
+function changemap(maps, mapfile) {
+myMap = svg.selectAll("path")
+.data(topojson.feature(maps, maps.objects[mapfile]).features);
+ myMap.enter().append("path")
+ myMap.attr("d", path)
+  .attr("class", function(d){
+                    return d.properties.CATEGORY;
+                  })
+ .attr("state", function(d){
+                  return d.properties.LABEL;
+              })
+ .attr("executions", 0)
+ .style("stroke", "#ffffff");
+ myMap.exit().remove();
+ }
 //Setup the initial render
-triggerRedraw([1789030,200280])
+d3.json("GeoJSON/master.topojson", function(error, data) {
+  window.maps = data;
+  triggerRedraw([1789030,200280])
+})
+
 });
 </script>
 <div id="slider" style="width:960px; margin-left:10px;"></div>
 <div id="currentYear" style="width:100px; margin-left:auto; margin-right:auto;"><h1>1789</h1></div>
-<div id="console" style="width:400px; float:left;"></div>
+<div id="console" style="width:400px; display:none; float:left;"></div>
 <style>
 .state {
 }
