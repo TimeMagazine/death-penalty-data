@@ -78,8 +78,9 @@ var color = d3.scale.linear()
   });
 
 }
-function getExecutions(begin,end) {
-  $.ajax({
+
+function callExecutions(){
+    $.ajax({
     url: "data.csv",
     success: function (csvd) {
         results = $.parse(csvd, {
@@ -87,6 +88,11 @@ function getExecutions(begin,end) {
           header: true,
           dynamicTyping: true
       })
+        return results;
+    }})
+}
+
+function getExecutions(begin,end) {
     totalExecutions = 0;
     $.each(results.results.rows, function(index,value){
       if(value.DateYear >= begin && value.DateYear <= end){
@@ -100,8 +106,6 @@ function getExecutions(begin,end) {
     })
     DrawChloropleth(totalExecutions)
     logConsole()
-    }
-});
 }
 var projection = d3.geo.albersUsa().scale(800);
 var path = d3.geo.path().projection(projection);
@@ -140,6 +144,7 @@ myMap = svg.selectAll("path")
  }
 //Setup the initial render
 d3.json("GeoJSON/master.topojson", function(error, data) {
+  window.results = callExecutions();
   window.maps = data;
   triggerRedraw([1789030,200280])
 })
