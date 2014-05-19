@@ -1,4 +1,4 @@
-United States death penalty historical data
+U.S. death penalty historical data
 ==================
 
 Convert the Espy file into clean CSV or JSON documents
