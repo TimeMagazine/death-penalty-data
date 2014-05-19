@@ -6,8 +6,19 @@ import ColumnMap
 import Mapping
 import Execution
 from collections import defaultdict
-
 import pprint, json, csv
+
+def writeOutput(AllExecutions):
+	if "--csv" in sys.argv:
+		if "--states" in sys.argv:
+			writeCSVList(AllExecutions)
+		else:
+			writeCSV(AllExecutions)
+	elif "--json" in sys.argv:
+		writeJSON(AllExecutions)
+	else:
+		print "File format argument not specified, printing data here"
+		prettyprint(AllExecutions)
 
 def prettyprint(AllExecutions):
 	pprint.pprint(AllExecutions)
@@ -15,18 +26,22 @@ def prettyprint(AllExecutions):
 def writeJSON(AllExecutions):
 	with open("data.json", "w") as outfile:
 	    json.dump(AllExecutions, outfile, indent=4)
+	print "Wrote JSON file"
 
 def writeCSV(AllExecutions):
-	spamWriter = csv.writer(open('espy.csv', 'wb'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+	spamWriter = csv.writer(open('data.csv', 'wb'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 	spamWriter.writerow(AllExecutions[1].keys())
 	for execution in AllExecutions:
 		spamWriter.writerow(execution.values())
+	print "Wrote CSV file"
+
 
 def writeCSVList(AllExecutions):
 	spamWriter = csv.writer(open('data.csv', 'wb'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 	#spamWriter.writerow(AllExecutions[1].keys())
 	for execution in AllExecutions:
 		spamWriter.writerow(execution)
+	print "Wrote CSV file"
 
 
 Maps = ColumnMap.Maps
@@ -58,28 +73,25 @@ with open('08451-0001-Data.txt') as asciidata:
 		setattr(current_execution,column['name'],attribute)
 	AllExecutions.append(current_execution.getExecution())
 
-writeCSV(AllExecutions)
-
 print "found %d total executions in the data" % len(AllExecutions)
 
 if "--states" in sys.argv:
 	AllExecutions = [ex for ex in AllExecutions if ex["JurisdictionOfExecution"] == "State"]	
 	print "reduced to %d executions carried out by states" % len(AllExecutions)
+	data = defaultdict(lambda: defaultdict(int))
+	total = defaultdict(int)
 
-data = defaultdict(lambda: defaultdict(int))
-total = defaultdict(int)
+	for ex in AllExecutions:
+		data[ex['DateYear']][ex['StateOfExecution']] += 1
+		total[ex['StateOfExecution']] += 1
 
-for ex in AllExecutions:
-	data[ex['DateYear']][ex['StateOfExecution']] += 1
-	total[ex['StateOfExecution']] += 1
+	headers = sorted(total.keys())
+	output = [["year"] + headers]
+	for y in range(1700, 2003):
+		datum = [y]
+		for state in headers:		
+			datum.append(0 if state not in data[str(y)] else data[str(y)][state])
+		output.append(datum)
+	AllExecutions = output
 
-headers = sorted(total.keys())
-output = [["year"] + headers]
-
-for y in range(1700, 2003):
-	datum = [y]
-	for state in headers:		
-		datum.append(0 if state not in data[str(y)] else data[str(y)][state])
-	output.append(datum)
-
-writeCSVList(output)
+writeOutput(AllExecutions)
