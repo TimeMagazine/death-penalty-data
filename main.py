@@ -9,17 +9,12 @@ from collections import defaultdict
 import pprint, json, csv
 
 def writeOutput(AllExecutions):
-	if "--csv" in sys.argv:
-		if "--states" in sys.argv:
-			writeCSVList(AllExecutions)
-		else:
-			writeCSV(AllExecutions)
 	if "--json" in sys.argv:
 		writeJSON(AllExecutions)
-	
-	if "--json" not in sys.argv and "--csv" not in sys.argv:
-		print "No Export file type specified, check Readme for more information about export file types"
-		sys.exit()
+	elif "--summary" in sys.argv:
+		writeCSVList(AllExecutions)
+	else:
+		writeCSV(AllExecutions)
 
 def prettyprint(AllExecutions):
 	pprint.pprint(AllExecutions)
@@ -50,7 +45,13 @@ CrimeMappings = Mapping.CrimeMappings
 AllExecutions = []
 
 #1608-2002
-epsyfile = raw_input ('Enter EPSY file name: ')
+epsyfile = "08451-0001-Data.txt"
+if not os.path.isfile(epsyfile):
+	epsyfile = raw_input ('Enter EPSY file name: ')
+if not os.path.isfile(epsyfile):
+	print "Couldn't find file"
+	sys.exit()
+
 with open(epsyfile) as asciidata:
  for penalty in asciidata:
  	current_execution = Execution.Execution()
@@ -74,8 +75,10 @@ with open(epsyfile) as asciidata:
 print "found %d total executions in the data" % len(AllExecutions)
 
 if "--states" in sys.argv:
-	AllExecutions = [ex for ex in AllExecutions if ex["JurisdictionOfExecution"] == "State"]	
+	AllExecutions = [ex for ex in AllExecutions if ex["JurisdictionOfExecution"] == "State"]
 	print "reduced to %d executions carried out by states" % len(AllExecutions)
+
+if "--summary" in sys.argv:	
 	data = defaultdict(lambda: defaultdict(int))
 	total = defaultdict(int)
 
