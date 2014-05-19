@@ -1,3 +1,7 @@
 *.pyc
 *.sublime-workspace
 *.sublime-project
+.DS_Store
+08451-0001-Data.txt
+data.csv
+data.json
