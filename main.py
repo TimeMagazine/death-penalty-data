@@ -14,11 +14,12 @@ def writeOutput(AllExecutions):
 			writeCSVList(AllExecutions)
 		else:
 			writeCSV(AllExecutions)
-	elif "--json" in sys.argv:
+	if "--json" in sys.argv:
 		writeJSON(AllExecutions)
-	else:
-		print "File format argument not specified, printing data here"
-		prettyprint(AllExecutions)
+	
+	if "--json" not in sys.argv and "--csv" not in sys.argv:
+		print "No Export file type specified, check Readme for more information about export file types"
+		sys.exit()
 
 def prettyprint(AllExecutions):
 	pprint.pprint(AllExecutions)
@@ -48,12 +49,9 @@ Maps = ColumnMap.Maps
 CrimeMappings = Mapping.CrimeMappings
 AllExecutions = []
 
-if not os.path.isfile('08451-0001-Data.txt'):
-	print "Couldn't find '08451-0001-Data.txt'. You need to download it manually (see README)"
-	sys.exit()
-
 #1608-2002
-with open('08451-0001-Data.txt') as asciidata:
+epsyfile = raw_input ('Enter EPSY file name: ')
+with open(epsyfile) as asciidata:
  for penalty in asciidata:
  	current_execution = Execution.Execution()
  	for column in Maps:
