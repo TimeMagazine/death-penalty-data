@@ -20,12 +20,12 @@ def prettyprint(AllExecutions):
 	pprint.pprint(AllExecutions)
 
 def writeJSON(AllExecutions):
-	with open("data.json", "w") as outfile:
+	with open("data/data.json", "w") as outfile:
 	    json.dump(AllExecutions, outfile, indent=4)
 	print "Wrote JSON file"
 
 def writeCSV(AllExecutions):
-	spamWriter = csv.writer(open('data.csv', 'wb'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+	spamWriter = csv.writer(open('data/data.csv', 'wb'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 	spamWriter.writerow(AllExecutions[1].keys())
 	for execution in AllExecutions:
 		spamWriter.writerow(execution.values())
@@ -33,7 +33,7 @@ def writeCSV(AllExecutions):
 
 
 def writeCSVList(AllExecutions):
-	spamWriter = csv.writer(open('data.csv', 'wb'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+	spamWriter = csv.writer(open('data/data.csv', 'wb'), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 	#spamWriter.writerow(AllExecutions[1].keys())
 	for execution in AllExecutions:
 		spamWriter.writerow(execution)
